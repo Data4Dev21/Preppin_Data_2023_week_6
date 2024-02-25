@@ -13,6 +13,35 @@ Online Interface Superfan
 Neutral if difference is between 0 and 1
 Calculate the Percent of Total customers in each category, rounded to 1 decimal place*/
 
+
+--first (un) pivot the the columns into rows
+SELECT *
+    FROM 
+(SELECT *
+    FROM TIL_PLAYGROUND.PREPPIN_DATA_INPUTS.PD2023_WK06_DSB_CUSTOMER_SURVEY) AS src--first source table
+    UNPIVOT(scale FOR mobile_ratings IN (MOBILE_APP___EASE_OF_USE, MOBILE_APP___EASE_OF_ACCESS, MOBILE_APP___NAVIGATION, MOBILE_APP___LIKELIHOOD_TO_RECOMMEND, MOBILE_APP___OVERALL_RATING,
+                                  ONLINE_INTERFACE___EASE_OF_USE, ONLINE_INTERFACE___EASE_OF_ACCESS, ONLINE_INTERFACE___NAVIGATION, ONLINE_INTERFACE___LIKELIHOOD_TO_RECOMMEND,
+	                              ONLINE_INTERFACE___OVERALL_RATING
+)) AS pvt -- first pivot
+
+--create a split_part to segment my platform and method
+
+SELECT customer_id
+      ,split_part(mobile_ratings, '___', 1) AS platform
+      ,split_part(mobile_ratings, '___', 2) AS method
+      ,scale
+    FROM 
+(SELECT *
+    FROM TIL_PLAYGROUND.PREPPIN_DATA_INPUTS.PD2023_WK06_DSB_CUSTOMER_SURVEY) AS src--first source table
+    UNPIVOT(scale FOR mobile_ratings IN (MOBILE_APP___EASE_OF_USE, MOBILE_APP___EASE_OF_ACCESS, MOBILE_APP___NAVIGATION, MOBILE_APP___LIKELIHOOD_TO_RECOMMEND, MOBILE_APP___OVERALL_RATING,
+                                  ONLINE_INTERFACE___EASE_OF_USE, ONLINE_INTERFACE___EASE_OF_ACCESS, ONLINE_INTERFACE___NAVIGATION, ONLINE_INTERFACE___LIKELIHOOD_TO_RECOMMEND,
+	                              ONLINE_INTERFACE___OVERALL_RATING
+)) AS pvt -- first pivot
+
+
+--online and mobile device are  both on one column so I need to re pivot to get them on differnt fields
+
+
 WITH cte AS
 (
 SELECT customer_id
@@ -23,15 +52,15 @@ SELECT customer_id
 (SELECT *
     FROM TIL_PLAYGROUND.PREPPIN_DATA_INPUTS.PD2023_WK06_DSB_CUSTOMER_SURVEY) AS src--first source table
     UNPIVOT(scale FOR mobile_ratings IN (MOBILE_APP___EASE_OF_USE, MOBILE_APP___EASE_OF_ACCESS, MOBILE_APP___NAVIGATION, MOBILE_APP___LIKELIHOOD_TO_RECOMMEND, MOBILE_APP___OVERALL_RATING,
-                                         ONLINE_INTERFACE___EASE_OF_USE, ONLINE_INTERFACE___EASE_OF_ACCESS, ONLINE_INTERFACE___NAVIGATION, ONLINE_INTERFACE___LIKELIHOOD_TO_RECOMMEND,
-	                                       ONLINE_INTERFACE___OVERALL_RATING  --data type relevant here
+                                  ONLINE_INTERFACE___EASE_OF_USE, ONLINE_INTERFACE___EASE_OF_ACCESS, ONLINE_INTERFACE___NAVIGATION, ONLINE_INTERFACE___LIKELIHOOD_TO_RECOMMEND,
+	                              ONLINE_INTERFACE___OVERALL_RATING
 )) AS pvt -- first pivot
 )
-,cte1 AS
+,cte1 AS     --CTE1 was brought in to be used a s areference for aggreegate calculations
 (
 SELECT *
     FROM cte
-    pivot(sum(scale)FOR platform IN ('MOBILE_APP', 'ONLINE_INTERFACE'))--second pivot
+    pivot(min(scale)FOR platform IN ('MOBILE_APP', 'ONLINE_INTERFACE'))--second pivot
     WHERE method!='OVERALL_RATING'
 )
 , cte2 AS
