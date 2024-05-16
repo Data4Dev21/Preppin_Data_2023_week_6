@@ -56,7 +56,7 @@ SELECT customer_id
 	                              ONLINE_INTERFACE___OVERALL_RATING
 )) AS pvt -- first pivot
 )
-,cte1 AS     --CTE1 was brought in to be used a s areference for aggreegate calculations
+,cte1 AS     --CTE1 was brought in to be used as a reference for aggregate calculations
 (
 SELECT *
     FROM cte
